@@ -15,7 +15,7 @@ ENV GOFLAGS=-mod=vendor
 WORKDIR /src
 
 FROM gobase AS wasm-version
-RUN --mount=target=. \
+RUN --mount=target=version,src=version \
   PKG=github.com/tonistiigi/wasm-cli-plugin VERSION=$(git describe --match 'v[0-9]*' --dirty='.m' --always --tags) REVISION=$(git rev-parse HEAD)$(if ! git diff --no-ext-diff --quiet --exit-code; then echo .m; fi); \
   echo "-X ${PKG}/version.Version=${VERSION} -X ${PKG}/version.Revision=${REVISION} -X ${PKG}/version.Package=${PKG}" | tee /tmp/.ldflags; \
   echo -n "${VERSION}" | tee /tmp/.version;
@@ -41,7 +41,10 @@ WORKDIR /go/src/github.com/docker/cli
 RUN git clone git://$REPO . && git checkout $BRANCH
 RUN ./scripts/build/binary
 
+FROM tonistiigi/wasmtime:binary AS wasmtime
+
 FROM scratch AS binaries-unix
+COPY --from=wasmtime / /
 COPY --from=wasm-build /usr/bin/docker-wasm /
 
 FROM binaries-unix AS binaries-darwin
@@ -53,7 +56,7 @@ COPY --from=wasm-build /usr/bin/docker-wasm /docker-wasm.exe
 FROM binaries-$TARGETOS AS binaries
 
 FROM alpine AS demo-env
-RUN apk add --no-cache iptables tmux
+RUN apk add --no-cache iptables tmux ca-certificates
 RUN mkdir -p /usr/local/lib/docker/cli-plugins && ln -s /usr/local/bin/docker-wasm /usr/local/lib/docker/cli-plugins/docker-wasm
 COPY ./hack/demo-env/entrypoint.sh /usr/local/bin
 COPY ./hack/demo-env/tmux.conf /root/.tmux.conf

@@ -9,7 +9,7 @@ binaries-cross:
 
 install: binaries
 	mkdir -p ~/.docker/cli-plugins
-	cp bin/buildx ~/.docker/cli-plugins/docker-buildx
+	cp bin/docker-wasm ~/.docker/cli-plugins/docker-wasm
 
 lint:
 	./hack/lint

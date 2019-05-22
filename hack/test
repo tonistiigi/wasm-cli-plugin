@@ -4,12 +4,12 @@
 set -eu -o pipefail
 
 : ${CONTINUOUS_INTEGRATION=}
-: ${BUILDX_NOCACHE=}
+: ${WASM_NOCACHE=}
 
 progressFlag=""
 if [ "$CONTINUOUS_INTEGRATION" == "true" ]; then progressFlag="--progress=plain"; fi
 
-iid="buildx-tests"
+iid="wasm-tests"
 iidfile=$(mktemp -t docker-iidfile.XXXXXXXXXX)
 set -x
 
@@ -34,14 +34,14 @@ case $buildmode in
   ;;
 esac
 
-cacheVolume="buildx-cache"
+cacheVolume="wasm-cache"
 if ! docker inspect "$cacheVolume" 2>&1 >/dev/null ; then
-cacheVolume=$(docker create --name=buildx-cache -v /root/.cache -v /go/pkg/mod alpine)
+cacheVolume=$(docker create --name=wasm-cache -v /root/.cache -v /go/pkg/mod alpine)
 fi
 
 docker run --rm -v /tmp --volumes-from=$cacheVolume --privileged $iid go test ${TESTFLAGS:--v} ${TESTPKGS:-./...}
 
-if [ -n "$BUILDX_NOCACHE" ]; then
+if [ -n "$WASM_NOCACHE" ]; then
   docker rm -v $cacheVolume
 fi
 

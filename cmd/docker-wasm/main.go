@@ -9,7 +9,7 @@ import (
 	"github.com/docker/cli/cli-plugins/plugin"
 	"github.com/docker/cli/cli/command"
 	"github.com/spf13/cobra"
-	"github.com/tonistiigi/buildx/version"
+	"github.com/tonistiigi/wasm-cli-plugin/version"
 )
 
 func main() {

@@ -2,6 +2,7 @@ package control
 
 import (
 	"context"
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/containerd/containerd/snapshots/native"
 	"github.com/docker/docker/errdefs"
 	"github.com/opencontainers/image-spec/identity"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	bolt "go.etcd.io/bbolt"
@@ -155,6 +157,10 @@ func (c *Controller) Pull(ctx context.Context, ref string, platform platforms.Ma
 
 	handlers := images.Handlers(
 		remotes.FetchHandler(c.cs, fetcher),
+		images.HandlerFunc(func(ctx context.Context, desc ocispec.Descriptor) ([]ocispec.Descriptor, error) {
+			log.Printf("pulling %s", desc.Digest)
+			return nil, err
+		}),
 		handler,
 	)
 

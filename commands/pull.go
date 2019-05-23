@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/containerd/containerd/platforms"
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
@@ -31,7 +29,8 @@ func runPull(dockerCli command.Cli, opt control.Opt, ref string) error {
 		return errors.WithStack(err)
 	}
 
-	fmt.Printf("pulled: %+v\n", img)
+	_ = img
+
 	return nil
 }
 

@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"github.com/containerd/containerd/platforms"
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
 	"github.com/moby/buildkit/util/appcontext"
@@ -19,12 +18,7 @@ func runRun(dockerCli command.Cli, opt control.Opt, ref string) error {
 	}
 	defer c.Close()
 
-	p, err := platforms.Parse("wasi/wasm")
-	if err != nil {
-		return errors.Wrapf(err, "invalid platform")
-	}
-
-	pm := platforms.Only(p)
+	pm := allowedPlatforms()
 
 	img, err := c.GetRuntimeImage(ctx, ref, pm)
 	if err != nil || img == nil {

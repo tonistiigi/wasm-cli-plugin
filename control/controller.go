@@ -2,6 +2,7 @@ package control
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 	"os"
 	"path/filepath"
@@ -168,13 +169,32 @@ func (c *Controller) Pull(ctx context.Context, ref string, platform platforms.Ma
 		return nil, err
 	}
 
-	if err := unpack(ctx, desc, c.cs, c.mdb.Snapshotter("native"), platform); err != nil {
-		return nil, err
-	}
-
 	img := images.Image{
 		Name:   name,
 		Target: desc,
+	}
+
+	config, err := img.Config(ctx, c.cs, platform)
+	if err != nil {
+		return nil, err
+	}
+
+	dt, err := content.ReadBlob(ctx, c.cs, config)
+	if err != nil {
+		return nil, err
+	}
+
+	var ociimg ocispec.Image
+	if err := json.Unmarshal(dt, &ociimg); err != nil {
+		return nil, err
+	}
+
+	if ociimg.Architecture != "wasm" {
+		return nil, errors.Errorf("invalid architecture %s, only wasm allowed", ociimg.Architecture)
+	}
+
+	if err := unpack(ctx, desc, c.cs, c.mdb.Snapshotter("native"), platform); err != nil {
+		return nil, err
 	}
 
 	for {

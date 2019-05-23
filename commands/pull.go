@@ -5,6 +5,7 @@ import (
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
 	"github.com/moby/buildkit/util/appcontext"
+	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
 	"github.com/tonistiigi/wasm-cli-plugin/control"
@@ -19,12 +20,7 @@ func runPull(dockerCli command.Cli, opt control.Opt, ref string) error {
 	}
 	defer c.Close()
 
-	p, err := platforms.Parse("wasi/wasm")
-	if err != nil {
-		return errors.Wrapf(err, "invalid platform")
-	}
-
-	img, err := c.Pull(ctx, ref, platforms.Only(p))
+	img, err := c.Pull(ctx, ref, allowedPlatforms())
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -45,4 +41,11 @@ func pullCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
 	}
 
 	return cmd
+}
+
+func allowedPlatforms() platforms.MatchComparer {
+	return platforms.Only(ocispec.Platform{
+		OS:           "wasi",
+		Architecture: "wasm",
+	})
 }

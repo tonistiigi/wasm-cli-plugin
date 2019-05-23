@@ -72,7 +72,9 @@ func (c *Controller) Run(ctx context.Context, img *images.Image, platform platfo
 	}
 
 	var ociimg ocispec.Image
-	err = json.Unmarshal(dt, &ociimg)
+	if err := json.Unmarshal(dt, &ociimg); err != nil {
+		return err
+	}
 
 	args := append(ociimg.Config.Entrypoint, ociimg.Config.Cmd...)
 

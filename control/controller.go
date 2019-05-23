@@ -3,7 +3,6 @@ package control
 import (
 	"context"
 	"encoding/json"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,6 +20,7 @@ import (
 	"github.com/opencontainers/image-spec/identity"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"go.etcd.io/bbolt"
 	bolt "go.etcd.io/bbolt"
 	"golang.org/x/sync/semaphore"
@@ -159,7 +159,7 @@ func (c *Controller) Pull(ctx context.Context, ref string, platform platforms.Ma
 	handlers := images.Handlers(
 		remotes.FetchHandler(c.cs, fetcher),
 		images.HandlerFunc(func(ctx context.Context, desc ocispec.Descriptor) ([]ocispec.Descriptor, error) {
-			log.Printf("pulling %s", desc.Digest)
+			logrus.Infof("pulling %s", desc.Digest)
 			return nil, err
 		}),
 		handler,

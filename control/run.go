@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/images"
@@ -13,11 +14,19 @@ import (
 	bkidentity "github.com/moby/buildkit/identity"
 	"github.com/opencontainers/image-spec/identity"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/sirupsen/logrus"
 	copy "github.com/tonistiigi/fsutil/copy"
 	"github.com/tonistiigi/wasm-cli-plugin/util/singlemounter"
 )
 
-func (c *Controller) Run(ctx context.Context, img *images.Image, platform platforms.MatchComparer) error {
+type ProcessOpt struct {
+	Args       []string
+	Entrypoint string
+	Env        map[string]string
+	Volumes    map[string]string
+}
+
+func (c *Controller) Run(ctx context.Context, img *images.Image, platform platforms.MatchComparer, po ProcessOpt) error {
 	ctx = addNS(ctx)
 
 	chain, err := img.RootFS(ctx, c.cs, platform)
@@ -76,18 +85,46 @@ func (c *Controller) Run(ctx context.Context, img *images.Image, platform platfo
 		return err
 	}
 
+	if po.Entrypoint != "" {
+		ociimg.Config.Entrypoint = []string{po.Entrypoint}
+	}
+
+	if po.Entrypoint != "" || len(po.Args) > 0 {
+		ociimg.Config.Cmd = po.Args
+	}
+
+	for k, v := range po.Env {
+		ociimg.Config.Env = append(ociimg.Config.Env, k+"="+v)
+	}
+
 	args := append(ociimg.Config.Entrypoint, ociimg.Config.Cmd...)
 
 	args[0] = filepath.Join(target, args[0]) // TODO: not safe
 
 	newArgs := []string{}
 	for _, v := range ociimg.Config.Env {
-		newArgs = append(newArgs, "--env="+v)
+		parts := strings.SplitN(v, "=", 2)
+		if _, ok := po.Env[parts[0]]; !ok {
+			newArgs = append(newArgs, "--env="+v)
+		}
 	}
+	for k, v := range po.Env {
+		newArgs = append(newArgs, "--env="+k+"="+v)
+	}
+
 	newArgs = append(newArgs, "--mapdir=/:"+target)
+
+	for src, dest := range po.Volumes {
+		newArgs = append(newArgs, "--mapdir="+dest+":"+src)
+	}
+
 	args = append(newArgs, args...)
 
-	cmd := exec.Command("wasmtime", args...)
+	runtime := "wasmtime"
+
+	logrus.Debugf("running: %s %s", runtime, strings.Join(args, " "))
+
+	cmd := exec.Command(runtime, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"os"
+	"strings"
+
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
 	"github.com/moby/buildkit/util/appcontext"
@@ -9,7 +12,14 @@ import (
 	"github.com/tonistiigi/wasm-cli-plugin/control"
 )
 
-func runRun(dockerCli command.Cli, opt control.Opt, ref string) error {
+type runOpt struct {
+	entrypoint string
+	args       []string
+	volumes    []string
+	env        []string
+}
+
+func runRun(dockerCli command.Cli, opt control.Opt, ref string, ro runOpt) error {
 	ctx := appcontext.Context()
 
 	c, err := getController(opt)
@@ -28,7 +38,39 @@ func runRun(dockerCli command.Cli, opt control.Opt, ref string) error {
 		}
 	}
 
-	if err := c.Run(ctx, img, pm); err != nil {
+	po := control.ProcessOpt{
+		Args:       ro.args,
+		Entrypoint: ro.entrypoint,
+	}
+
+	if len(ro.env) > 0 {
+		m := map[string]string{}
+		for _, env := range ro.env {
+			parts := strings.SplitN(env, "=", 2)
+			var v string
+			if len(parts) == 2 {
+				v = parts[1]
+			} else {
+				v = os.Getenv(parts[0])
+			}
+			m[parts[0]] = v
+		}
+		po.Env = m
+	}
+
+	if len(ro.volumes) > 0 {
+		m := map[string]string{}
+		for _, v := range ro.volumes {
+			parts := strings.SplitN(v, ":", 2)
+			if len(parts) != 2 {
+				return errors.Errorf("invalid volume %q, only bind mounts supported", v)
+			}
+			m[parts[0]] = parts[1]
+		}
+		po.Volumes = m
+	}
+
+	if err := c.Run(ctx, img, pm, po); err != nil {
 		return err
 	}
 
@@ -36,14 +78,22 @@ func runRun(dockerCli command.Cli, opt control.Opt, ref string) error {
 }
 
 func runCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
+	var ro runOpt
+
 	cmd := &cobra.Command{
 		Use:   "run REF",
 		Short: "Run a wasm image",
-		Args:  cli.ExactArgs(1),
+		Args:  cli.RequiresMinArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runRun(dockerCli, opt, args[0])
+			ro.args = args[1:]
+			return runRun(dockerCli, opt, args[0], ro)
 		},
 	}
+
+	flags := cmd.Flags()
+	flags.StringVar(&ro.entrypoint, "entrypoint", "", "Overwrite the default ENTRYPOINT of the image")
+	flags.StringSliceVarP(&ro.env, "env", "e", nil, "Set environment variables")
+	flags.StringSliceVarP(&ro.volumes, "volume", "v", nil, "Bind mount a volume")
 
 	return cmd
 }

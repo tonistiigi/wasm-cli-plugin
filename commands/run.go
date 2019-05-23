@@ -38,7 +38,7 @@ func runRun(dockerCli command.Cli, opt control.Opt, ref string) error {
 func runCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run REF",
-		Short: "Run an image",
+		Short: "Run a wasm image",
 		Args:  cli.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runRun(dockerCli, opt, args[0])

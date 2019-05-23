@@ -27,7 +27,7 @@ func runRm(dockerCli command.Cli, opt control.Opt, ref string) error {
 func rmCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "rm NAME",
-		Short: "Remove an image",
+		Short: "Remove a wasm image",
 		Args:  cli.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runRm(dockerCli, opt, args[0])

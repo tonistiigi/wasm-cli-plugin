@@ -33,7 +33,7 @@ func runPull(dockerCli command.Cli, opt control.Opt, ref string) error {
 func pullCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "pull REF",
-		Short: "Pull an image",
+		Short: "Pull a wasm image",
 		Args:  cli.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runPull(dockerCli, opt, args[0])

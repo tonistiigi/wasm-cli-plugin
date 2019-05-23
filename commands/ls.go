@@ -2,6 +2,8 @@ package commands
 
 import (
 	"fmt"
+	"os"
+	"text/tabwriter"
 
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
@@ -24,9 +26,15 @@ func runLs(dockerCli command.Cli, opt control.Opt) error {
 		return err
 	}
 
+	tw := tabwriter.NewWriter(os.Stdout, 1, 8, 1, '\t', 0)
+
+	fmt.Fprintln(tw, "NAME\tDIGEST")
+
 	for _, img := range imgs {
-		fmt.Printf("img: %+v\n", img)
+		fmt.Fprintf(tw, "%s\t%s\n", img.Name, img.Target.Digest)
 	}
+
+	tw.Flush()
 
 	return nil
 }
@@ -34,7 +42,7 @@ func runLs(dockerCli command.Cli, opt control.Opt) error {
 func lsCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "ls",
-		Short: "List images",
+		Short: "List wasm images",
 		Args:  cli.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runLs(dockerCli, opt)

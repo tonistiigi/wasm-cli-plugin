@@ -24,7 +24,7 @@ binariesDocker() {
   iid=$(cat $iidfile)
   containerID=$(docker create $iid copy)
   docker cp $containerID:/ bin/tmp
-  mv bin/tmp/build* bin/
+  mv bin/tmp/*wasm* bin/
   rm -rf bin/tmp
   docker rm $containerID
   docker rmi -f $iid

@@ -31,7 +31,7 @@ RUN --mount=target=. --mount=target=/root/.cache,type=cache \
 FROM wasm-build AS integration-tests
 COPY . .
 
-FROM tonistiigi/wasmtime:binary AS wasmtime
+FROM --platform=$TARGETPLATFORM tonistiigi/wasmtime:binary AS wasmtime
 
 FROM scratch AS binaries-unix
 COPY --from=wasmtime / /

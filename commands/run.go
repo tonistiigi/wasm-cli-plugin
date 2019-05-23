@@ -25,9 +25,13 @@ func runRun(dockerCli command.Cli, opt control.Opt, ref string) error {
 	}
 
 	pm := platforms.Only(p)
-	img, err := c.Pull(ctx, ref, pm)
-	if err != nil {
-		return errors.WithStack(err)
+
+	img, err := c.GetRuntimeImage(ctx, ref, pm)
+	if err != nil || img == nil {
+		img, err = c.Pull(ctx, ref, pm)
+		if err != nil {
+			return errors.WithStack(err)
+		}
 	}
 
 	if err := c.Run(ctx, img, pm); err != nil {

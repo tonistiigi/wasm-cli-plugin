@@ -16,6 +16,7 @@ import (
 	"github.com/containerd/containerd/snapshots"
 	"github.com/containerd/containerd/snapshots/native"
 	"github.com/docker/docker/errdefs"
+	"github.com/opencontainers/image-spec/identity"
 	"github.com/pkg/errors"
 	"go.etcd.io/bbolt"
 	bolt "go.etcd.io/bbolt"
@@ -94,6 +95,35 @@ func (c *Controller) Delete(ctx context.Context, ref string) error {
 func (c *Controller) Images(ctx context.Context) ([]images.Image, error) {
 	ctx = addNS(ctx)
 	return c.is.List(ctx)
+}
+
+func (c *Controller) GetRuntimeImage(ctx context.Context, ref string, platform platforms.MatchComparer) (*images.Image, error) {
+	ref, err := parseRef(ref)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx = addNS(ctx)
+
+	img, err := c.is.Get(ctx, ref)
+	if err != nil {
+		return nil, nil
+	}
+
+	chain, err := img.RootFS(ctx, c.cs, platform)
+	if err != nil {
+		return nil, nil
+	}
+
+	chainID := identity.ChainID(chain)
+
+	sn := c.mdb.Snapshotter("native")
+
+	if _, err := sn.Stat(ctx, chainID.String()); err == nil {
+		return &img, nil
+	}
+
+	return nil, nil
 }
 
 func (c *Controller) Pull(ctx context.Context, ref string, platform platforms.MatchComparer) (*images.Image, error) {

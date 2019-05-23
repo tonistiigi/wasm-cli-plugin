@@ -24,7 +24,7 @@ github.com/agl/ed25519
 github.com/agl/ed25519/edwards25519
 # github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973
 github.com/beorn7/perks/quantile
-# github.com/containerd/containerd v1.2.5
+# github.com/containerd/containerd v1.3.0-0.20190426060238-3a3f0aac8819
 github.com/containerd/containerd
 github.com/containerd/containerd/containers
 github.com/containerd/containerd/content
@@ -53,6 +53,7 @@ github.com/containerd/containerd/defaults
 github.com/containerd/containerd/diff
 github.com/containerd/containerd/events
 github.com/containerd/containerd/images/archive
+github.com/containerd/containerd/images/oci
 github.com/containerd/containerd/leases
 github.com/containerd/containerd/leases/proxy
 github.com/containerd/containerd/mount
@@ -63,10 +64,13 @@ github.com/containerd/containerd/plugin
 github.com/containerd/containerd/remotes/docker/schema1
 github.com/containerd/containerd/rootfs
 github.com/containerd/containerd/runtime/linux/runctypes
+github.com/containerd/containerd/runtime/v2/runc/options
 github.com/containerd/containerd/snapshots
 github.com/containerd/containerd/snapshots/proxy
 github.com/containerd/containerd/log
+github.com/containerd/containerd/labels
 github.com/containerd/containerd/reference
+github.com/containerd/containerd/version
 github.com/containerd/containerd/api/types/task
 github.com/containerd/containerd/sys
 github.com/containerd/containerd/events/exchange
@@ -79,14 +83,16 @@ github.com/containerd/continuity/sysx
 github.com/containerd/continuity/syscallx
 # github.com/containerd/fifo v0.0.0-20190226154929-a9fb20d87448
 github.com/containerd/fifo
+# github.com/containerd/ttrpc v0.0.0-20190513141551-f82148331ad2
+github.com/containerd/ttrpc
 # github.com/containerd/typeurl v0.0.0-20190228175220-2a93cfde8c20
 github.com/containerd/typeurl
 # github.com/docker/cli v0.0.0-20190321234815-f40f9c240ab0
 github.com/docker/cli/cli-plugins/manager
 github.com/docker/cli/cli-plugins/plugin
 github.com/docker/cli/cli/command
-github.com/docker/cli/cli/config
 github.com/docker/cli/cli
+github.com/docker/cli/cli/config
 github.com/docker/cli/cli/connhelper
 github.com/docker/cli/cli/config/configfile
 github.com/docker/cli/cli/config/types
@@ -296,6 +302,7 @@ golang.org/x/net/http2/hpack
 golang.org/x/net/idna
 golang.org/x/net/internal/timeseries
 # golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f
+golang.org/x/sync/semaphore
 golang.org/x/sync/errgroup
 # golang.org/x/sys v0.0.0-20190322080309-f49334f85ddc
 golang.org/x/sys/unix

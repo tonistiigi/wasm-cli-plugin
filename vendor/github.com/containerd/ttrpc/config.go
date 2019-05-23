@@ -14,17 +14,26 @@
    limitations under the License.
 */
 
-package archive
+package ttrpc
 
-import (
-	"time"
+import "github.com/pkg/errors"
 
-	"github.com/pkg/errors"
-)
+type serverConfig struct {
+	handshaker Handshaker
+}
 
-// as at MacOS 10.12 there is apparently no way to set timestamps
-// with nanosecond precision. We could fall back to utimes/lutimes
-// and lose the precision as a temporary workaround.
-func chtimes(path string, atime, mtime time.Time) error {
-	return errors.New("OSX missing UtimesNanoAt")
+type ServerOpt func(*serverConfig) error
+
+// WithServerHandshaker can be passed to NewServer to ensure that the
+// handshaker is called before every connection attempt.
+//
+// Only one handshaker is allowed per server.
+func WithServerHandshaker(handshaker Handshaker) ServerOpt {
+	return func(c *serverConfig) error {
+		if c.handshaker != nil {
+			return errors.New("only one handshaker allowed per server")
+		}
+		c.handshaker = handshaker
+		return nil
+	}
 }

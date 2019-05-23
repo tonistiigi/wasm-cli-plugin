@@ -4,11 +4,8 @@ import (
 	"github.com/docker/cli/cli-plugins/plugin"
 	"github.com/docker/cli/cli/command"
 	"github.com/spf13/cobra"
+	"github.com/tonistiigi/wasm-cli-plugin/control"
 )
-
-type rootOptions struct {
-	root string
-}
 
 func NewRootCmd(name string, isPlugin bool, dockerCli command.Cli) *cobra.Command {
 	cmd := &cobra.Command{
@@ -21,19 +18,26 @@ func NewRootCmd(name string, isPlugin bool, dockerCli command.Cli) *cobra.Comman
 		}
 	}
 
-	var options rootOptions
+	var opt control.Opt
 
 	flags := cmd.PersistentFlags()
-	flags.StringVar(&options.root, "data-root", "~/.docker/wasm", "Root directory of persistent state")
+	flags.StringVar(&opt.Root, "data-root", "~/.docker/wasm", "Root directory of persistent state")
 
-	addCommands(cmd, dockerCli, &options)
+	addCommands(cmd, dockerCli, &opt)
 	return cmd
 }
 
-func addCommands(cmd *cobra.Command, dockerCli command.Cli, opt *rootOptions) {
+func addCommands(cmd *cobra.Command, dockerCli command.Cli, opt *control.Opt) {
 	cmd.AddCommand(
-		pullCmd(dockerCli, opt),
-		rmCmd(dockerCli, opt),
-		lsCmd(dockerCli, opt),
+		pullCmd(dockerCli, *opt),
+		rmCmd(dockerCli, *opt),
+		lsCmd(dockerCli, *opt),
 	)
+}
+
+func getController(opt control.Opt) (*control.Controller, error) {
+	if opt.Root == "" {
+		opt.Root = "./.state"
+	}
+	return control.New(opt)
 }

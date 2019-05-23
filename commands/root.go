@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"os"
+	"path/filepath"
+
 	"github.com/docker/cli/cli-plugins/plugin"
 	"github.com/docker/cli/cli/command"
 	"github.com/spf13/cobra"
@@ -18,10 +21,15 @@ func NewRootCmd(name string, isPlugin bool, dockerCli command.Cli) *cobra.Comman
 		}
 	}
 
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		homeDir = "."
+	}
+
 	var opt control.Opt
 
 	flags := cmd.PersistentFlags()
-	flags.StringVar(&opt.Root, "data-root", "~/.docker/wasm", "Root directory of persistent state")
+	flags.StringVar(&opt.Root, "data-root", filepath.Join(homeDir, ".docker/wasm"), "Root directory of persistent state")
 
 	addCommands(cmd, dockerCli, &opt)
 	return cmd
@@ -32,6 +40,7 @@ func addCommands(cmd *cobra.Command, dockerCli command.Cli, opt *control.Opt) {
 		pullCmd(dockerCli, *opt),
 		rmCmd(dockerCli, *opt),
 		lsCmd(dockerCli, *opt),
+		runCmd(dockerCli, *opt),
 	)
 }
 

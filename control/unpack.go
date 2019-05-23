@@ -86,6 +86,10 @@ func unpack(ctx context.Context, desc ocispec.Descriptor, cs content.Store, sn s
 	}
 	chainID := identity.ChainID(chain)
 
+	if _, err := sn.Stat(ctx, chainID.String()); err == nil {
+		return nil
+	}
+
 	key := bkidentity.NewID()
 	mounts, err := sn.Prepare(ctx, key, "")
 	if err != nil {

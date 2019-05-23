@@ -1,8 +1,6 @@
 package commands
 
 import (
-	"fmt"
-
 	"github.com/containerd/containerd/platforms"
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
@@ -12,7 +10,7 @@ import (
 	"github.com/tonistiigi/wasm-cli-plugin/control"
 )
 
-func runPull(dockerCli command.Cli, opt control.Opt, ref string) error {
+func runRun(dockerCli command.Cli, opt control.Opt, ref string) error {
 	ctx := appcontext.Context()
 
 	c, err := getController(opt)
@@ -26,22 +24,26 @@ func runPull(dockerCli command.Cli, opt control.Opt, ref string) error {
 		return errors.Wrapf(err, "invalid platform")
 	}
 
-	img, err := c.Pull(ctx, ref, platforms.Only(p))
+	pm := platforms.Only(p)
+	img, err := c.Pull(ctx, ref, pm)
 	if err != nil {
 		return errors.WithStack(err)
 	}
 
-	fmt.Printf("pulled: %+v\n", img)
+	if err := c.Run(ctx, img, pm); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func pullCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
+func runCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "pull REF",
-		Short: "Pull an image",
+		Use:   "run REF",
+		Short: "Run an image",
 		Args:  cli.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runPull(dockerCli, opt, args[0])
+			return runRun(dockerCli, opt, args[0])
 		},
 	}
 

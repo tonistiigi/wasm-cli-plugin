@@ -27,16 +27,17 @@ type Opt struct {
 }
 
 type Controller struct {
-	db  *bbolt.DB
-	cs  content.Store
-	is  images.Store
-	mdb *metadata.DB
+	db   *bbolt.DB
+	cs   content.Store
+	is   images.Store
+	mdb  *metadata.DB
+	root string
 }
 
 func New(opt Opt) (*Controller, error) {
 	root := opt.Root
 
-	if err := os.MkdirAll(filepath.Join(root), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, "containers"), 0700); err != nil {
 		return nil, err
 	}
 
@@ -65,10 +66,11 @@ func New(opt Opt) (*Controller, error) {
 	}
 
 	return &Controller{
-		db:  db,
-		cs:  mdb.ContentStore(),
-		is:  metadata.NewImageStore(mdb),
-		mdb: mdb,
+		db:   db,
+		cs:   mdb.ContentStore(),
+		is:   metadata.NewImageStore(mdb),
+		mdb:  mdb,
+		root: root,
 	}, nil
 }
 

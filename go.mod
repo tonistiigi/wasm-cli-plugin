@@ -69,6 +69,7 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.2 // indirect
 	github.com/theupdateframework/notary v0.6.1 // indirect
+	github.com/tonistiigi/fsutil v0.0.0-20190403235420-524c23dab726
 	github.com/xlab/handysort v0.0.0-20150421192137-fb3537ed64a1 // indirect
 	go.etcd.io/bbolt v1.3.2
 	golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f

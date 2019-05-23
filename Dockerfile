@@ -1,7 +1,6 @@
-# syntax=docker/dockerfile:1.0-experimental
+# syntax=docker/dockerfile:1.1-experimental
 
-ARG DOCKERD_VERSION=18.09
-ARG CLI_VERSION=19.03
+ARG DOCKERD_VERSION=rc
 
 FROM docker:$DOCKERD_VERSION AS dockerd-release
 
@@ -32,15 +31,6 @@ RUN --mount=target=. --mount=target=/root/.cache,type=cache \
 FROM wasm-build AS integration-tests
 COPY . .
 
-FROM golang:1.12-alpine AS docker-cli-build
-RUN apk add -U git bash coreutils gcc musl-dev
-ENV CGO_ENABLED=0
-ARG REPO=github.com/docker/cli
-ARG CLI_VERSION
-WORKDIR /go/src/github.com/docker/cli
-RUN git clone git://$REPO . && git checkout $BRANCH
-RUN ./scripts/build/binary
-
 FROM tonistiigi/wasmtime:binary AS wasmtime
 
 FROM scratch AS binaries-unix
@@ -61,7 +51,6 @@ RUN mkdir -p /usr/local/lib/docker/cli-plugins && ln -s /usr/local/bin/docker-wa
 COPY ./hack/demo-env/entrypoint.sh /usr/local/bin
 COPY ./hack/demo-env/tmux.conf /root/.tmux.conf
 COPY --from=dockerd-release /usr/local/bin /usr/local/bin
-COPY --from=docker-cli-build /go/src/github.com/docker/cli/build/docker /usr/local/bin
 COPY --from=binaries / /usr/local/bin/
 VOLUME /var/lib/docker
 ENTRYPOINT ["entrypoint.sh"]

@@ -17,6 +17,7 @@ type runOpt struct {
 	args       []string
 	volumes    []string
 	env        []string
+	runtime    string
 }
 
 func runRun(dockerCli command.Cli, opt control.Opt, ref string, ro runOpt) error {
@@ -41,6 +42,7 @@ func runRun(dockerCli command.Cli, opt control.Opt, ref string, ro runOpt) error
 	po := control.ProcessOpt{
 		Args:       ro.args,
 		Entrypoint: ro.entrypoint,
+		Runtime:    ro.runtime,
 	}
 
 	if len(ro.env) > 0 {
@@ -94,6 +96,7 @@ func runCmd(dockerCli command.Cli, opt control.Opt) *cobra.Command {
 	flags.StringVar(&ro.entrypoint, "entrypoint", "", "Overwrite the default ENTRYPOINT of the image")
 	flags.StringSliceVarP(&ro.env, "env", "e", nil, "Set environment variables")
 	flags.StringSliceVarP(&ro.volumes, "volume", "v", nil, "Bind mount a volume")
+	flags.StringVar(&ro.runtime, "runtime", "", "WASM runtime")
 
 	return cmd
 }

@@ -14,6 +14,7 @@ import (
 	bkidentity "github.com/moby/buildkit/identity"
 	"github.com/opencontainers/image-spec/identity"
 	ocispec "github.com/opencontainers/image-spec/specs-go/v1"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	copy "github.com/tonistiigi/fsutil/copy"
 	"github.com/tonistiigi/wasm-cli-plugin/util/singlemounter"
@@ -24,9 +25,18 @@ type ProcessOpt struct {
 	Entrypoint string
 	Env        map[string]string
 	Volumes    map[string]string
+	Runtime    string
 }
 
 func (c *Controller) Run(ctx context.Context, img *images.Image, platform platforms.MatchComparer, po ProcessOpt) error {
+	if po.Runtime == "" {
+		rt, err := detectRuntime()
+		if err != nil {
+			return err
+		}
+		po.Runtime = rt
+	}
+
 	ctx = addNS(ctx)
 
 	chain, err := img.RootFS(ctx, c.cs, platform)
@@ -101,33 +111,51 @@ func (c *Controller) Run(ctx context.Context, img *images.Image, platform platfo
 
 	args[0] = filepath.Join(target, args[0]) // TODO: not safe
 
-	newArgs := []string{}
-	for _, v := range ociimg.Config.Env {
-		parts := strings.SplitN(v, "=", 2)
-		if _, ok := po.Env[parts[0]]; !ok {
-			newArgs = append(newArgs, "--env="+v)
+	switch po.Runtime {
+	case "wasmtime":
+		newArgs := []string{}
+		for _, v := range ociimg.Config.Env {
+			parts := strings.SplitN(v, "=", 2)
+			if _, ok := po.Env[parts[0]]; !ok {
+				newArgs = append(newArgs, "--env="+v)
+			}
 		}
+		for k, v := range po.Env {
+			newArgs = append(newArgs, "--env="+k+"="+v)
+		}
+
+		newArgs = append(newArgs, "--mapdir=/:"+target)
+
+		for src, dest := range po.Volumes {
+			newArgs = append(newArgs, "--mapdir="+dest+":"+src)
+		}
+
+		args = append(newArgs, args...)
+	case "wasmer":
+		newArgs := []string{"run", "--mapdir=/:" + target, args[0], "--"}
+		args = append(newArgs, args[1:]...)
+	default:
+		return errors.Errorf("unknown runtime %s", po.Runtime)
 	}
-	for k, v := range po.Env {
-		newArgs = append(newArgs, "--env="+k+"="+v)
-	}
 
-	newArgs = append(newArgs, "--mapdir=/:"+target)
+	logrus.Debugf("running: %s %s", po.Runtime, strings.Join(args, " "))
 
-	for src, dest := range po.Volumes {
-		newArgs = append(newArgs, "--mapdir="+dest+":"+src)
-	}
-
-	args = append(newArgs, args...)
-
-	runtime := "wasmtime"
-
-	logrus.Debugf("running: %s %s", runtime, strings.Join(args, " "))
-
-	cmd := exec.Command(runtime, args...)
+	cmd := exec.Command(po.Runtime, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	return cmd.Run()
+	if err := cmd.Run(); err != nil {
+		return errors.Wrapf(err, "failed to run %s %s", po.Runtime, strings.Join(args, " "))
+	}
+	return nil
+}
+
+func detectRuntime() (string, error) {
+	for _, test := range []string{"wasmtime", "wasmer"} {
+		if _, err := exec.LookPath(test); err == nil {
+			return test, nil
+		}
+	}
+	return "", errors.Errorf("failed to find and wasm runtimes (wasmtime, wasmer)")
 }

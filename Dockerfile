@@ -58,3 +58,10 @@ COPY --from=binaries / /usr/local/bin/
 VOLUME /var/lib/docker
 ENV DOCKER_BUILDKIT=1
 ENTRYPOINT ["entrypoint.sh"]
+
+FROM alpine AS image
+RUN apk add --no-cache ca-certificates
+COPY --from=binaries / /bin/
+ENTRYPOINT ["docker-wasm"]
+
+FROM binaries

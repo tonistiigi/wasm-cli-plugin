@@ -130,8 +130,8 @@ func (c *Controller) Run(ctx context.Context, img *images.Image, platform platfo
 		for src, dest := range po.Volumes {
 			newArgs = append(newArgs, "--mapdir="+dest+":"+src)
 		}
-
-		args = append(newArgs, args...)
+		newArgs = append(newArgs, args[0], "--")
+		args = append(newArgs, args[1:]...)
 	case "wasmer":
 		newArgs := []string{"run", "--mapdir=/:" + makeRel(target), args[0], "--"}
 		args = append(newArgs, args[1:]...)

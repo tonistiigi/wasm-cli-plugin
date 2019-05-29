@@ -46,11 +46,14 @@ COPY --from=wasm-build /usr/bin/docker-wasm /docker-wasm.exe
 FROM binaries-$TARGETOS AS binaries
 
 FROM alpine AS demo-env
-RUN apk add --no-cache iptables tmux ca-certificates
+RUN apk add --no-cache iptables tmux ca-certificates curl
 RUN mkdir -p /usr/local/lib/docker/cli-plugins && ln -s /usr/local/bin/docker-wasm /usr/local/lib/docker/cli-plugins/docker-wasm
+RUN curl -fsSL https://tinyurl.com/install-buildx | sh
 COPY ./hack/demo-env/entrypoint.sh /usr/local/bin
 COPY ./hack/demo-env/tmux.conf /root/.tmux.conf
 COPY --from=dockerd-release /usr/local/bin /usr/local/bin
+WORKDIR /work
+COPY ./examples .
 COPY --from=binaries / /usr/local/bin/
 VOLUME /var/lib/docker
 ENTRYPOINT ["entrypoint.sh"]

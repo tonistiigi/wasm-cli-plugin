@@ -56,4 +56,5 @@ WORKDIR /work
 COPY ./examples .
 COPY --from=binaries / /usr/local/bin/
 VOLUME /var/lib/docker
+ENV DOCKER_BUILDKIT=1
 ENTRYPOINT ["entrypoint.sh"]

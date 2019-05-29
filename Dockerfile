@@ -53,4 +53,5 @@ COPY ./hack/demo-env/tmux.conf /root/.tmux.conf
 COPY --from=dockerd-release /usr/local/bin /usr/local/bin
 COPY --from=binaries / /usr/local/bin/
 VOLUME /var/lib/docker
+ENV DOCKER_BUILDKIT=1
 ENTRYPOINT ["entrypoint.sh"]

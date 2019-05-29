@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/containerd/containerd/content"
@@ -129,10 +130,10 @@ func (c *Controller) Run(ctx context.Context, img *images.Image, platform platfo
 		for src, dest := range po.Volumes {
 			newArgs = append(newArgs, "--mapdir="+dest+":"+src)
 		}
-
-		args = append(newArgs, args...)
+		newArgs = append(newArgs, args[0], "--")
+		args = append(newArgs, args[1:]...)
 	case "wasmer":
-		newArgs := []string{"run", "--mapdir=/:" + target, args[0], "--"}
+		newArgs := []string{"run", "--mapdir=/:" + makeRel(target), args[0], "--"}
 		args = append(newArgs, args[1:]...)
 	default:
 		return errors.Errorf("unknown runtime %s", po.Runtime)
@@ -140,7 +141,7 @@ func (c *Controller) Run(ctx context.Context, img *images.Image, platform platfo
 
 	logrus.Debugf("running: %s %s", po.Runtime, strings.Join(args, " "))
 
-	cmd := exec.Command(po.Runtime, args...)
+	cmd := exec.Command(binary(po.Runtime), args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -153,9 +154,31 @@ func (c *Controller) Run(ctx context.Context, img *images.Image, platform platfo
 
 func detectRuntime() (string, error) {
 	for _, test := range []string{"wasmtime", "wasmer"} {
-		if _, err := exec.LookPath(test); err == nil {
+		if _, err := exec.LookPath(binary(test)); err == nil {
 			return test, nil
 		}
 	}
 	return "", errors.Errorf("failed to find and wasm runtimes (wasmtime, wasmer)")
+}
+
+func binary(in string) string {
+	if runtime.GOOS == "windows" {
+		return in + ".exe"
+	}
+	return in
+}
+
+func makeRel(p string) string {
+	base, err := os.Getwd()
+	if err != nil {
+		return p
+	}
+	p, err = filepath.Rel(base, p)
+	if err != nil {
+		return p
+	}
+	if p == "" {
+		return p
+	}
+	return filepath.ToSlash(p)
 }

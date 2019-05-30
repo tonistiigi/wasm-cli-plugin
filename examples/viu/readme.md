@@ -12,5 +12,5 @@ docker buildx imagetools inspect tonistiigi/viu
 docker run tonistiigi/viu:docker
 docker wasm run tonistiigi/viu:docker
 docker wasm run --runtime=wasmer tonistiigi/viu:docker
-docker wasm run --runtime=wasmer tonistiigi/viu /success.gif
+docker wasm run --runtime=wasmer tonistiigi/viu /mindblown.gif
 ```

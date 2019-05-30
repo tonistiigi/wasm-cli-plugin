@@ -49,7 +49,7 @@ Build `docker-wasm` or pull from [releases](https://github.com/tonistiigi/wasm-c
 
 ### Building multi-platform images with wasm support
 
-Wasm applications are built from Dockerfiles by setting `--platform=wasi/wasm` flag on build. `--platform` is available (without experimental) since Docker 19.03 (only with BuildKit). Docker [buildx](https://github.com/docker/buildx) plugin is another way to build and allows specifying multiple platforms together into a single multi-platform image and works with previous Docker engine versions.
+Wasm applications are built from Dockerfiles by setting `--platform=wasi/wasm` flag on build. `--platform` is available (without experimental) since Docker 19.03 (only with BuildKit). Docker [buildx](https://github.com/docker/buildx) plugin is another way to build and allows specifying multiple platforms together, creating a single multi-platform image, and works with previous Docker engine versions.
 
 [Automatic platform args](https://docs.docker.com/engine/reference/builder/#automatic-platform-args-in-the-global-scope) can be used in Dockerfiles to efficiently cross-compile  to any architecture with multi-stage builds. https://github.com/tonistiigi/xx repository contains a set of base images that automatically integrate with platform args, requiring no configuration from user to automatically pick the correct toolchain for a specific `--platform` value.
 

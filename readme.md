@@ -77,5 +77,5 @@ ctr run --rm --runtime io.containerd.wasm.v1 --platform=wasi/wasm docker.io/toni
 
 Example:
 ```
-docker run --rm tonistiigi/docker-wasm run tonistiigi/viu /success.gif
+docker run --rm tonistiigi/docker-wasm run tonistiigi/viu /mindblown.gif
 ```

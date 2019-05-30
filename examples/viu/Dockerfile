@@ -15,7 +15,7 @@ COPY --from=build /out/viu.wasm /
 ENTRYPOINT ["/viu.wasm"]
 
 FROM release-$TARGETOS AS release
-ADD https://media.giphy.com/media/9FvN85CcQU9fW/giphy.gif /success.gif
+ADD https://media.giphy.com/media/xT0xeJpnrWC4XWblEk/giphy.gif /mindblown.gif
 ADD docker.png /
 
 FROM release AS docker

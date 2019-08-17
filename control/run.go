@@ -133,7 +133,18 @@ func (c *Controller) Run(ctx context.Context, img *images.Image, platform platfo
 		newArgs = append(newArgs, args[0], "--")
 		args = append(newArgs, args[1:]...)
 	case "wasmer":
-		newArgs := []string{"run", "--mapdir=/:" + makeRel(target), args[0], "--"}
+		newArgs := []string{"run", "--mapdir=/:" + makeRel(target)}
+		for _, v := range ociimg.Config.Env {
+			parts := strings.SplitN(v, "=", 2)
+			if _, ok := po.Env[parts[0]]; !ok {
+				newArgs = append(newArgs, "--env="+v)
+			}
+		}
+		for k, v := range po.Env {
+			newArgs = append(newArgs, "--env="+k+"="+v)
+		}
+
+		newArgs = append(newArgs, args[0], "--")
 		args = append(newArgs, args[1:]...)
 	default:
 		return errors.Errorf("unknown runtime %s", po.Runtime)
